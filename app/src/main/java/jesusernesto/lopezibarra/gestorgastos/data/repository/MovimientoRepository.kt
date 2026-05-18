@@ -26,9 +26,13 @@ class MovimientoRepository(private val dao: MovimientoDao) {
     // ─────────────────────────────────────────────────────────────
 
     suspend fun guardarGasto(gasto: GastoEntity) {
-        val idInsertado = dao.insertGasto(gasto)                          // 1. Room
+        val idInsertado = dao.insertGasto(gasto)
         val gastoConId = gasto.copy(idGasto = idInsertado.toInt())
-        uid?.let { FirestoreSyncService.syncGasto(it, gastoConId) }      // 2. Firestore
+
+        val uidActual = SessionManager.firebaseUid
+        android.util.Log.d("Firestore", "UID al guardar gasto: $uidActual")  // ← agrega esto
+
+        uidActual?.let { FirestoreSyncService.syncGasto(it, gastoConId) }
     }
 
     suspend fun actualizarGasto(gasto: GastoEntity) {

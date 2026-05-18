@@ -23,5 +23,8 @@ object SessionManager {
     val firebaseUid: String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
 
-    fun cerrarSesion() { usuarioActual = null }
+    fun cerrarSesion() {
+        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+        usuarioActual = null
+    }
 }

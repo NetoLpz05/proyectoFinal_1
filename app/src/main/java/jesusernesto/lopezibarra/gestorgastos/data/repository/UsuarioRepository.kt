@@ -52,10 +52,31 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         val firebaseUid = firebaseResult.user?.uid
             ?: return AuthResult.Error("Error desconocido al iniciar sesión")
 
-        // 2. Busca el perfil local en Room (creado al registrarse)
+        // Si está en Room, úsalo directo
         val usuarioRoom = dao.buscarPorFirebaseUid(firebaseUid)
             ?: dao.buscarPorEmail(email.trim().lowercase())
-            ?: return AuthResult.Error("Perfil local no encontrado. Contacta soporte.")
+            ?: run {
+                // No está en Room (reinstalación / nuevo dispositivo)
+                // → busca el perfil en Firestore y guárdalo localmente
+                val doc = firestore.collection("usuarios").document(firebaseUid).get().await()
+                if (!doc.exists()) return AuthResult.Error("Perfil no encontrado. Intenta registrarte de nuevo.")
+
+                val data = doc.data!!
+                val perfilRestaurado = UsuarioEntity(
+                    firebaseUid   = firebaseUid,
+                    nombre        = data["nombre"] as? String ?: "",
+                    apellido      = data["apellido"] as? String ?: "",
+                    email         = data["email"] as? String ?: email.trim().lowercase(),
+                    fechaNacimiento = data["fechaNacimiento"] as? String ?: "",
+                    genero        = data["genero"] as? String ?: "",
+                    telefono      = data["telefono"] as? String ?: "",
+                    fotoPerfil    = data["fotoPerfil"] as? String,
+                    biometriaActiva = data["biometriaActiva"] as? Boolean ?: false,
+                    tema          = data["tema"] as? String ?: "CLARO"
+                )
+                val id = dao.insertar(perfilRestaurado)
+                perfilRestaurado.copy(idUsuario = id.toInt())
+            }
 
         return AuthResult.Exito(usuarioRoom)
     }
