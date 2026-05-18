@@ -10,6 +10,8 @@ import jesusernesto.lopezibarra.gestorgastos.data.entity.UsuarioEntity
 @Dao
 interface UsuarioDao {
 
+    @Query("SELECT * FROM usuario WHERE firebaseUid = :uid LIMIT 1")
+    suspend fun buscarPorFirebaseUid(uid: String): UsuarioEntity?
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertar(usuario: UsuarioEntity): Long
 

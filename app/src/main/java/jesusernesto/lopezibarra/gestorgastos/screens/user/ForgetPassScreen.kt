@@ -1,278 +1,150 @@
 package jesusernesto.lopezibarra.gestorgastos.screens.user
 
-import androidx.compose.foundation.*
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * CAMBIO NECESARIO EN ForgetPassScreen.kt
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Antes el flujo era:
+ *   1. Usuario ingresa email → app busca en Room → muestra campos de nueva contraseña
+ *   2. Usuario escribe nueva contraseña → app actualiza Room
+ *
+ * Ahora el flujo es:
+ *   1. Usuario ingresa email → Firebase manda correo de recuperación
+ *   2. Usuario hace clic en el enlace del correo → Firebase cambia la contraseña en la nube
+ *   3. Al volver a la app, simplemente hace login normal con su nueva contraseña
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * REEMPLAZA EL CONTENIDO DE ForgetPassScreen.kt con esto:
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+
+
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import jesusernesto.lopezibarra.gestorgastos.data.enums.PasoRecuperacion
-import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
-
+import jesusernesto.lopezibarra.gestorgastos.ui.theme.Purple
+import jesusernesto.lopezibarra.gestorgastos.ui.theme.PurpleLight
+import jesusernesto.lopezibarra.gestorgastos.ui.theme.TextGray
 
 @Composable
 fun ForgotPasswordScreen(
     onBackToLogin: () -> Unit,
     viewModel: ForgotpasswordViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var paso by remember { mutableStateOf(PasoRecuperacion.BUSCAR_EMAIL) }
-
     var email by remember { mutableStateOf("") }
-    var nuevaContrasena by remember { mutableStateOf("") }
-    var confirmarContrasena by remember { mutableStateOf("") }
-    var nuevaVisible by remember { mutableStateOf(false) }
-    var confirmarVisible by remember { mutableStateOf(false) }
-
-    // Avanzar al paso 2 cuando se encontró el usuario
-    LaunchedEffect(uiState.usuarioEncontrado) {
-        if (uiState.usuarioEncontrado) paso = PasoRecuperacion.NUEVA_CONTRASEÑA
-    }
-
-    // Avanzar al paso 3 cuando se cambió la contraseña
-    LaunchedEffect(uiState.cambioExitoso) {
-        if (uiState.cambioExitoso) paso = PasoRecuperacion.EXITO
-    }
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(horizontal = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        when (paso) {
+        Spacer(Modifier.height(20.dp))
 
-            PasoRecuperacion.BUSCAR_EMAIL -> {
-                Text(
-                    text = "Recuperar contraseña",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkNavy
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Ingresa el correo con el que te registraste",
-                    fontSize = 14.sp,
-                    color = TextGray
-                )
-                Spacer(modifier = Modifier.height(28.dp))
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBackToLogin) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
+            }
+        }
 
-                FieldLabel("Correo electrónico")
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        viewModel.resetError()
-                    },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true,
-                    isError = uiState.error != null,
-                    colors = fieldColors()
-                )
-                if (uiState.error != null) {
+        Spacer(Modifier.height(24.dp))
+
+        Text("Recuperar contraseña", fontWeight = FontWeight.Bold, fontSize = 26.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Te enviaremos un correo con un enlace para restablecer tu contraseña.",
+            fontSize = 14.sp,
+            color = TextGray,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        if (uiState.emailEnviado) {
+            // ── Estado de éxito ──────────────────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("✅ Correo enviado", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp)
+                        "Revisa tu bandeja de entrada en $email y sigue las instrucciones del correo.",
+                        fontSize = 14.sp,
+                        color = TextGray,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { viewModel.buscarEmail(email.trim().lowercase()) },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                    enabled = !uiState.cargando
-                ) {
-                    if (uiState.cargando) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Continuar", fontWeight = FontWeight.SemiBold, color = Color.White)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Volver al login",
-                    color = Purple,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onBackToLogin() }
-                )
             }
 
-            PasoRecuperacion.NUEVA_CONTRASEÑA -> {
-                Text(
-                    text = "Nueva contraseña",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkNavy
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = onBackToLogin,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Purple)
+            ) {
+                Text("Volver al inicio de sesión", color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+
+        } else {
+            // ── Formulario de email ──────────────────────────────────────────
+            if (uiState.error != null) {
+                Text(uiState.error!!, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+                Spacer(Modifier.height(8.dp))
+            }
+
+            Text("Correo Electrónico", fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
+                color = TextGray, modifier = Modifier.align(Alignment.Start).padding(bottom = 6.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it; viewModel.resetError() },
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(10.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = PurpleLight, focusedBorderColor = Purple,
+                    unfocusedContainerColor = Color.White, focusedContainerColor = Color.White
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Elige una contraseña segura de al menos 6 caracteres",
-                    fontSize = 14.sp,
-                    color = TextGray
-                )
-                Spacer(modifier = Modifier.height(28.dp))
+            )
 
-                FieldLabel("Nueva contraseña")
-                OutlinedTextField(
-                    value = nuevaContrasena,
-                    onValueChange = {
-                        nuevaContrasena = it
-                        viewModel.resetError()
-                    },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true,
-                    isError = uiState.error != null,
-                    visualTransformation = if (nuevaVisible) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { nuevaVisible = !nuevaVisible }) {
-                            Icon(
-                                imageVector = if (nuevaVisible) Icons.Filled.VisibilityOff
-                                else Icons.Filled.Visibility,
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    colors = fieldColors()
-                )
+            Spacer(Modifier.weight(1f))
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                FieldLabel("Confirmar contraseña")
-                OutlinedTextField(
-                    value = confirmarContrasena,
-                    onValueChange = {
-                        confirmarContrasena = it
-                        viewModel.resetError()
-                    },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true,
-                    isError = uiState.error != null,
-                    visualTransformation = if (confirmarVisible) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { confirmarVisible = !confirmarVisible }) {
-                            Icon(
-                                imageVector = if (confirmarVisible) Icons.Filled.VisibilityOff
-                                else Icons.Filled.Visibility,
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    colors = fieldColors()
-                )
-
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        viewModel.cambiarContraseña(nuevaContrasena, confirmarContrasena)
-                    },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                    enabled = !uiState.cargando
-                ) {
-                    if (uiState.cargando) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Guardar contraseña", fontWeight = FontWeight.SemiBold, color = Color.White)
-                    }
+            Button(
+                onClick = { viewModel.enviarEmailRecuperacion(email) },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                enabled = !uiState.cargando
+            ) {
+                if (uiState.cargando) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("Enviar correo de recuperación", color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
 
-            PasoRecuperacion.EXITO -> {
-                Text("✅", fontSize = 56.sp)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "¡Contraseña actualizada!",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkNavy
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Ya puedes iniciar sesión con tu nueva contraseña",
-                    fontSize = 14.sp,
-                    color = TextGray
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(
-                    onClick = onBackToLogin,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple)
-                ) {
-                    Text("Ir al login", fontWeight = FontWeight.SemiBold, color = Color.White)
-                }
-            }
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
 
-@Composable
-private fun FieldLabel(text: String) {
-    Text(
-        text = text,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        color = TextGray,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 6.dp)
-    )
-}
-
-@Composable
-private fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    unfocusedBorderColor = PurpleLight,
-    focusedBorderColor = Purple,
-    unfocusedContainerColor = Color.White,
-    focusedContainerColor = Color.White
-)
-
-@Preview(showBackground = true)
-@Composable
-fun ForgotPasswordPreview() {
-    MaterialTheme {
-        ForgotPasswordScreen(onBackToLogin = {})
-    }
-}

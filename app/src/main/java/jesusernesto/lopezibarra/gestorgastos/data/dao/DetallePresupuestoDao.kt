@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 interface DetallePresupuestoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertar(detalle: DetallePresupuestoEntity)
+    suspend fun insertar(detalle: DetallePresupuestoEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertarTodos(detalles: List<DetallePresupuestoEntity>)
+    suspend fun insertarTodos(detalles: List<DetallePresupuestoEntity>): List<Long>
 
     @Update
     suspend fun actualizar(detalle: DetallePresupuestoEntity)

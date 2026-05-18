@@ -11,10 +11,11 @@ import androidx.room.PrimaryKey
 data class UsuarioEntity(
     @PrimaryKey(autoGenerate = true)
     val idUsuario: Int = 0,
+    val firebaseUid: String = "",
     val nombre: String,
     val apellido: String,
     val email: String,
-    val contrasena: String,
+    val contrasena: String = "",
     val fechaNacimiento: String,
     val genero: String,
     val telefono: String = "",

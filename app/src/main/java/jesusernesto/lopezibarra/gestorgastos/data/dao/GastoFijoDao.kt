@@ -8,10 +8,10 @@ import jesusernesto.lopezibarra.gestorgastos.data.entity.GastoFijoEntity
 interface GastoFijoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertar(gasto: GastoFijoEntity)
+    suspend fun insertar(gasto: GastoFijoEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertarTodos(gastos: List<GastoFijoEntity>)
+    suspend fun insertarTodos(gastos: List<GastoFijoEntity>): List<Long>
 
     @Update
     suspend fun actualizar(gasto: GastoFijoEntity)

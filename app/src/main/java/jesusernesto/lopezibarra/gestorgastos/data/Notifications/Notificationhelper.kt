@@ -36,7 +36,7 @@ object Notificationhelper {
         porcentajeUsado: Int,
         gastado: Double,
         limite: Double,
-        notifId: Int = System.currentTimeMillis().toInt()
+        notifId: Int = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
     ){
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -48,8 +48,8 @@ object Notificationhelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val titulo = "Aleta de presupuesto: $categoria"
-        val mensaje = "Has usado el $porcentajeUsado% de tu límite " + "($${"%,.0f".format(gastado)} de $${"%,0f".format(limite)})"
+        val titulo = "Alerta de presupuesto: $categoria"
+        val mensaje = "Has usado el $porcentajeUsado% de tu límite " + "($${"%,.0f".format(gastado)} de $${"%,.0f".format(limite)})"
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID).
                 setSmallIcon(R.drawable.ic_launcher_foreground).
@@ -69,7 +69,7 @@ object Notificationhelper {
         categoria: String,
         gastado: Double,
         limite: Double,
-        notifId: Int = (System.currentTimeMillis() + 1).toInt()
+        notifId: Int = ((System.currentTimeMillis() + 1) % Int.MAX_VALUE).toInt()
     ){
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -82,8 +82,8 @@ object Notificationhelper {
         )
 
         val exceso = gastado - limite
-        val titulo = "!Presupusto excedido! $categoria"
-        val mensaje = "Superaste tu límite por $${"%,.0f".format(exceso)}" + "(Gastado: $${"%,.0f".format(gastado)} / Limite: $${"%,.0f".format(limite)})"
+        val titulo = "¡Presupuesto excedido! $categoria"
+        val mensaje = "Superaste tu límite por $${"%,.0f".format(exceso)}" + " (Gastado: $${"%,.0f".format(gastado)} / Limite: $${"%,.0f".format(limite)})"
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)

@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.Flow
 interface MovimientoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGasto(gasto: GastoEntity)
+    suspend fun insertGasto(gasto: GastoEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertIngreso(ingreso: IngresoEntity)
+    suspend fun insertIngreso(ingreso: IngresoEntity): Long
 
     @Update
     suspend fun updateGasto(gasto: GastoEntity)

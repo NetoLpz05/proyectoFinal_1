@@ -1,5 +1,7 @@
 package jesusernesto.lopezibarra.gestorgastos.data.repository
 
+import jesusernesto.lopezibarra.gestorgastos.data.FirestoreSyncService
+import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
 import jesusernesto.lopezibarra.gestorgastos.data.dao.*
 import jesusernesto.lopezibarra.gestorgastos.data.entity.*
 import kotlinx.coroutines.flow.Flow
@@ -13,10 +15,11 @@ class PresupuestoRepository(
     private val gastoFijoDao: GastoFijoDao,
     private val categoriaDao: CategoriaDao
 ) {
+    private val uid get() = SessionManager.firebaseUid
+
     fun obtenerPresupuestoCompleto(idUsuario: Int, mes: Int, anio: Int): Flow<PresupuestoConDetalles?> {
         return presupuestoDao.obtenerPresupuestoFlow(idUsuario, mes, anio).flatMapLatest { presupuesto ->
             if (presupuesto == null) return@flatMapLatest flowOf(null)
-            
             detallePresupuestoDao.obtenerPorPresupuestoFlow(presupuesto.idPresupuesto).map { detalles ->
                 PresupuestoConDetalles(presupuesto, detalles)
             }
@@ -31,27 +34,54 @@ class PresupuestoRepository(
         gastosFijos: List<GastoFijoEntity>,
         detalles: List<DetallePresupuestoEntity>
     ) {
+        val mesAnio = "${mes}_${anio}"
+
+        // 1. Room — lógica existente sin cambios
         val presupuestoExistente = presupuestoDao.obtenerPresupuesto(idUsuario, mes, anio)
         val idPresupuesto = if (presupuestoExistente != null) {
             val actualizado = presupuestoExistente.copy(ingresoMensual = ingresoMensual)
             presupuestoDao.actualizar(actualizado)
+            // 2a. Firestore sync presupuesto actualizado
+            uid?.let { FirestoreSyncService.syncPresupuesto(it, actualizado) }
             presupuestoExistente.idPresupuesto
         } else {
-            presupuestoDao.insertar(PresupuestoEntity(idUsuario = idUsuario, mes = mes, anio = anio, ingresoMensual = ingresoMensual)).toInt()
+            val nuevo = PresupuestoEntity(
+                idUsuario = idUsuario,
+                mes = mes,
+                anio = anio,
+                ingresoMensual = ingresoMensual
+            )
+            val id = presupuestoDao.insertar(nuevo).toInt()
+            val nuevoConId = nuevo.copy(idPresupuesto = id)
+            // 2a. Firestore sync nuevo presupuesto
+            uid?.let { FirestoreSyncService.syncPresupuesto(it, nuevoConId) }
+            id
         }
 
-        // Limpiar y guardar gastos fijos
+        // Gastos fijos — Room + Firestore
         gastoFijoDao.eliminarPorPresupuesto(idPresupuesto)
-        gastoFijoDao.insertarTodos(gastosFijos.map { it.copy(idPresupuesto = idPresupuesto) })
+        val gastosFijosConId = gastosFijos.map { it.copy(idPresupuesto = idPresupuesto) }
+        gastoFijoDao.insertarTodos(gastosFijosConId)
+        uid?.let { uidVal ->
+            gastosFijosConId.forEach { gf ->
+                FirestoreSyncService.syncGastoFijo(uidVal, mesAnio, gf)
+            }
+        }
 
-        // Limpiar y guardar detalles (presupuestos por categoría)
+        // Detalles por categoría — Room + Firestore
         detallePresupuestoDao.eliminarPorPresupuesto(idPresupuesto)
-        detallePresupuestoDao.insertarTodos(detalles.map { it.copy(idPresupuesto = idPresupuesto) })
+        val detallesConId = detalles.map { it.copy(idPresupuesto = idPresupuesto) }
+        detallePresupuestoDao.insertarTodos(detallesConId)
+        uid?.let { uidVal ->
+            detallesConId.forEach { det ->
+                FirestoreSyncService.syncDetallePresupuesto(uidVal, mesAnio, det)
+            }
+        }
     }
-    
-    suspend fun obtenerGastosFijos(idPresupuesto: Int) = gastoFijoDao.obtenerPorPresupuesto(idPresupuesto)
-    
-    // Eliminado el modificador 'suspend' porque devuelve un Flow
+
+    suspend fun obtenerGastosFijos(idPresupuesto: Int) =
+        gastoFijoDao.obtenerPorPresupuesto(idPresupuesto)
+
     fun obtenerCategorias(): Flow<List<CategoriaEntity>> = categoriaDao.obtenerTodas()
 }
 

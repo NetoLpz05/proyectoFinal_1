@@ -1,12 +1,14 @@
 package jesusernesto.lopezibarra.gestorgastos.data.repository
 
+import jesusernesto.lopezibarra.gestorgastos.data.FirestoreSyncService
 import jesusernesto.lopezibarra.gestorgastos.data.dao.GrupoDao
 import jesusernesto.lopezibarra.gestorgastos.data.dao.MovimientoDao
 import jesusernesto.lopezibarra.gestorgastos.data.entity.*
+import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlin.random.Random
 
-sealed class GrupoResult{
+sealed class GrupoResult {
     data class Exito(val grupo: GrupoEntity) : GrupoResult()
     data class Error(val mensaje: String) : GrupoResult()
 }
@@ -14,41 +16,36 @@ sealed class GrupoResult{
 class GrupoRepository(
     private val dao: GrupoDao,
     private val movimientoDao: MovimientoDao? = null
-){
+) {
+    private val uid get() = SessionManager.firebaseUid
+
     fun obtenerGrupos(): Flow<List<GrupoEntity>> = dao.obtenerTodos()
 
-    suspend fun crearGrupo(
-        nombre: String,
-        tipo: String,
-        imagen: String = ""
-    ): GrupoResult{
+    suspend fun crearGrupo(nombre: String, tipo: String, imagen: String = ""): GrupoResult {
         if (nombre.isBlank()) return GrupoResult.Error("El nombre no puede estar vacío")
         val codigo = generarCodigo()
-        val grupo = GrupoEntity(
-            nombre = nombre.trim(),
-            tipo = tipo,
-            codigoInvitacion = codigo,
-            imagen = imagen
-        )
-        val id = dao.insertarGrupo(grupo)
-        return GrupoResult.Exito(grupo.copy(idGrupo = id.toInt()))
+        val grupo = GrupoEntity(nombre = nombre.trim(), tipo = tipo, codigoInvitacion = codigo, imagen = imagen)
+        val id = dao.insertarGrupo(grupo)                                 // 1. Room
+        val grupoConId = grupo.copy(idGrupo = id.toInt())
+        FirestoreSyncService.syncGrupo(grupoConId)                        // 2. Firestore
+        return GrupoResult.Exito(grupoConId)
     }
 
     suspend fun eliminarGrupo(grupo: GrupoEntity) = dao.eliminarGrupo(grupo)
-    suspend fun buscarPorCodigo(codigo: String): GrupoEntity?=
+
+    suspend fun buscarPorCodigo(codigo: String): GrupoEntity? =
         dao.obtenerPorCodigo(codigo.uppercase().trim())
 
     fun obtenerMiembros(idGrupo: Int): Flow<List<UsuarioEntity>> =
         dao.obtenerUsuariosPorGrupo(idGrupo)
 
-    suspend fun agregarMiembro(idGrupo: Int, idUsuario: Int): GrupoResult{
+    suspend fun agregarMiembro(idGrupo: Int, idUsuario: Int): GrupoResult {
         return try {
             val relacion = UsuarioGrupoEntity(idGrupo = idGrupo, idUsuario = idUsuario)
             dao.insertarUsuarioGrupo(relacion)
-            val grupo = dao.obtenerPorId(idGrupo) ?:
-            return GrupoResult.Error("Grupo no encontrado")
+            val grupo = dao.obtenerPorId(idGrupo) ?: return GrupoResult.Error("Grupo no encontrado")
             GrupoResult.Exito(grupo)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             GrupoResult.Error("No se pudo agregar el miembro")
         }
     }
@@ -74,7 +71,7 @@ class GrupoRepository(
         if (participantes.isEmpty()) return GrupoResult.Error("Debe haber al menos un participante")
 
         return try {
-            // 1. Insertar el gasto en la tabla de gastos de grupo
+            // 1. Room: insertar gasto de grupo
             val gastoGrupo = GastoGrupoEntity(
                 idGrupo = idGrupo,
                 idUsuarioPago = idUsuarioPago,
@@ -84,8 +81,12 @@ class GrupoRepository(
                 fecha = fecha
             )
             val idGastoGrupoInserted = dao.insertarGastoGrupo(gastoGrupo)
+            val gastoGrupoConId = gastoGrupo.copy(idGastoGrupo = idGastoGrupoInserted.toInt())
 
-            // 2. Crear deudas para los demás participantes
+            // 2. Firestore: sincronizar gasto de grupo
+            FirestoreSyncService.syncGastoGrupo(gastoGrupoConId)
+
+            // 3. Room: crear deudas
             val montoPorPersona = monto / participantes.size
             participantes
                 .filter { it != idUsuarioPago }
@@ -96,9 +97,11 @@ class GrupoRepository(
                         montoDeuda = montoPorPersona
                     )
                     dao.insertarDeuda(deuda)
+                    // 4. Firestore: sincronizar deuda
+                    FirestoreSyncService.syncDeudaGrupo(deuda)
                 }
 
-            // 3. Sincronizar al perfil individual de quien pagó
+            // 5. Sincronizar al gasto individual del que pagó (Room + Firestore)
             movimientoDao?.let { movDao ->
                 val gastoIndividual = GastoEntity(
                     idUsuario = idUsuarioPago,
@@ -110,28 +113,28 @@ class GrupoRepository(
                     idGastoGrupo = idGastoGrupoInserted.toInt(),
                     esGrupal = true
                 )
-                movDao.insertGasto(gastoIndividual)
+                val idGastoInd = movDao.insertGasto(gastoIndividual)
+                val gastoIndConId = gastoIndividual.copy(idGasto = idGastoInd.toInt())
+                uid?.let { FirestoreSyncService.syncGasto(it, gastoIndConId) }
             }
 
-            val grupo = dao.obtenerPorId(idGrupo)
-                ?: return GrupoResult.Error("Grupo no encontrado")
+            val grupo = dao.obtenerPorId(idGrupo) ?: return GrupoResult.Error("Grupo no encontrado")
             GrupoResult.Exito(grupo)
+
         } catch (e: Exception) {
             e.printStackTrace()
             GrupoResult.Error("No se pudo registrar el gasto: ${e.message}")
         }
     }
 
-    suspend fun totalGastos(idGrupo: Int): Float =
-        dao.totalGastosPorGrupo(idGrupo) ?: 0f
+    suspend fun totalGastos(idGrupo: Int): Float = dao.totalGastosPorGrupo(idGrupo) ?: 0f
 
     fun obtenerDeudasPendientes(idUsuario: Int): Flow<List<DeudaGrupoEntity>> =
         dao.obtenerDeudasPendientesUsuario(idUsuario)
 
     suspend fun marcarPagada(idDeuda: Int) = dao.marcarDeudaPagada(idDeuda)
 
-
-    private fun generarCodigo(): String{
+    private fun generarCodigo(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return (1..5).map { chars[Random.nextInt(chars.length)] }.joinToString("")
     }

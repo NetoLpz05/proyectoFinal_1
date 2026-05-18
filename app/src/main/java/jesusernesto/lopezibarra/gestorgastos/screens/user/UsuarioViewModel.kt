@@ -24,6 +24,8 @@ sealed class AuthUiState {
 
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
+    // UsuarioRepository ahora recibe el DAO de Room (igual que antes)
+    // internamente también usa Firebase Auth y Firestore
     private val repository: UsuarioRepository by lazy {
         val dao = AppDatabase.getInstance(application).usuarioDao()
         UsuarioRepository(dao)
@@ -32,6 +34,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState
 
+    // ─────────────────────────────────────────────────────────────
+    // LOGIN  — Firebase autentica, Room devuelve el perfil local
+    // ─────────────────────────────────────────────────────────────
     fun login(email: String, contrasena: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Cargando
@@ -41,6 +46,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             _uiState.value = when (result) {
                 is AuthResult.Exito -> {
                     SessionManager.usuarioActual = result.usuario
+
+                    // Configuración de notificaciones (igual que antes)
                     val prefs = getApplication<Application>()
                         .getSharedPreferences("alertas_config", Context.MODE_PRIVATE)
                     prefs.edit()
@@ -56,6 +63,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // REGISTRO — Firebase crea cuenta, Room guarda perfil, Firestore sincroniza
+    // ─────────────────────────────────────────────────────────────
     fun registrar(
         nombre: String,
         apellido: String,
@@ -96,6 +106,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // ACTUALIZAR PERFIL — Room + Firestore en paralelo
+    // ─────────────────────────────────────────────────────────────
     fun actualizarPerfil(
         nombre: String,
         apellido: String,
@@ -103,19 +116,19 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         fotoPerfil: String?
     ) {
         val usuario = SessionManager.usuarioActual ?: return
-        
+
         viewModelScope.launch {
             _uiState.value = AuthUiState.Cargando
-            
+
             val usuarioActualizado = usuario.copy(
                 nombre = nombre,
                 apellido = apellido,
                 telefono = telefono,
                 fotoPerfil = fotoPerfil
             )
-            
+
             val result = repository.actualizarPerfil(usuarioActualizado)
-            
+
             _uiState.value = when (result) {
                 is AuthResult.Exito -> {
                     SessionManager.usuarioActual = result.usuario
@@ -126,6 +139,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // BIOMETRÍA Y CIERRE DE SESIÓN (sin cambios)
+    // ─────────────────────────────────────────────────────────────
     fun actualizarBiometria(activa: Boolean) {
         val usuario = SessionManager.usuarioActual ?: return
         viewModelScope.launch {
@@ -135,7 +151,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun cerrarSesion() {
-        SessionManager.cerrarSesion()
+        SessionManager.cerrarSesion()   // hace FirebaseAuth.signOut() + limpia sesión
         _uiState.value = AuthUiState.Idle
         NotificationScheduler.cancelar(getApplication())
     }
