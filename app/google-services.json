@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "831388027187",
+    "project_id": "gestor-de-gastos-1f241",
+    "storage_bucket": "gestor-de-gastos-1f241.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831388027187:android:de338132bd87a553d81646",
+        "android_client_info": {
+          "package_name": "jesusernesto.lopezibarra.gestorgastos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5yQ00Mf_vaN7BG-MaU57gRm-OU5s1ijw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
