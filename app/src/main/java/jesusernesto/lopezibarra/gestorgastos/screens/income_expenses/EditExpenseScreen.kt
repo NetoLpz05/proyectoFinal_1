@@ -16,8 +16,11 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import jesusernesto.lopezibarra.gestorgastos.data.entity.MetodoPagoEntity
+import jesusernesto.lopezibarra.gestorgastos.data.enums.TipoMetodoPago
 import jesusernesto.lopezibarra.gestorgastos.data.viewModel.*
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 import java.text.*
@@ -31,6 +34,7 @@ fun EditExpenseScreen(
     onBack: () -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
+    onNavigateToNewCard: () -> Unit = {},
     movimientoViewModel: MovimientoViewModel = viewModel(),
     metodoPagoViewModel: MetodoPagoViewModel = viewModel()
 ) {
@@ -45,6 +49,7 @@ fun EditExpenseScreen(
     var photoUri by remember { mutableStateOf<String?>(null) }
     
     var showDatePicker by remember { mutableStateOf(false) }
+    var showPaymentSheet by remember { mutableStateOf(false) }
 
     val categorias by movimientoViewModel.categorias.collectAsState(initial = emptyList())
     val metodosPago by metodoPagoViewModel.metodosPago.collectAsState()
@@ -179,8 +184,9 @@ fun EditExpenseScreen(
             SectionLabel("MÉTODO DE PAGO")
             val selectedMetodo = metodosPago.find { it.idMetodoPago == selectedPaymentId }
             PaymentCard(
-                nombre = selectedMetodo?.nombre ?: "Seleccionar",
-                detalle = "**** ${selectedMetodo?.ultimosDigitos ?: "0000"}"
+                nombre = selectedMetodo?.nombre ?: (if (selectedMetodo?.tipo == TipoMetodoPago.TARJETA_CREDITO) "Tarjeta de Crédito" else if (selectedMetodo?.tipo == TipoMetodoPago.TARJETA_DEBITO) "Tarjeta de Débito" else if (selectedMetodo?.tipo == TipoMetodoPago.EFECTIVO) "Efectivo" else "Seleccionar"),
+                detalle = if (selectedMetodo?.tipo == TipoMetodoPago.EFECTIVO) "DINERO FÍSICO" else "**** ${selectedMetodo?.ultimosDigitos ?: "0000"}",
+                onClick = { showPaymentSheet = true }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -248,6 +254,23 @@ fun EditExpenseScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
         }
+
+        if (showPaymentSheet) {
+            ModalBottomSheet(onDismissRequest = { showPaymentSheet = false }) {
+                FormaPagoCard1(
+                    metodos = metodosPago,
+                    selectedId = selectedPaymentId,
+                    onSelect = { idMetodo ->
+                        selectedPaymentId = idMetodo
+                        showPaymentSheet = false
+                    },
+                    onAddCard = {
+                        showPaymentSheet = false
+                        onNavigateToNewCard()
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -291,8 +314,12 @@ private fun CategoryIconItem(label: String, emoji: String, isSelected: Boolean, 
 }
 
 @Composable
-private fun PaymentCard(nombre: String, detalle: String) {
-    Surface(modifier = Modifier.fillMaxWidth().height(64.dp), shape = RoundedCornerShape(12.dp), color = Purple) {
+private fun PaymentCard(nombre: String, detalle: String, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().height(64.dp).clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        color = Purple
+    ) {
         Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Outlined.CreditCard, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(12.dp))
@@ -316,5 +343,69 @@ private fun DashedBoxEdit(color: Color, content: @Composable () -> Unit) {
         contentAlignment = Alignment.CenterStart
     ) {
         content()
+    }
+}
+
+@Composable
+fun FormaPagoCard1(
+    metodos: List<MetodoPagoEntity>,
+    selectedId: Int,
+    onSelect: (Int) -> Unit,
+    onAddCard: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
+        Box(modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp).size(width = 40.dp, height = 4.dp)
+            .clip(RoundedCornerShape(2.dp)).background(PurpleLight))
+
+        Text(text = "Selecciona el método", fontWeight = FontWeight.Bold, fontSize = 18.sp,
+            color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp))
+
+        metodos.forEach { metodo ->
+            val isSelected = selectedId == metodo.idMetodoPago
+
+            val emoji = when(metodo.tipo) {
+                TipoMetodoPago.EFECTIVO -> "💵"
+                else -> "💳"
+            }
+            val label = metodo.nombre ?: (if (metodo.tipo == TipoMetodoPago.TARJETA_CREDITO) "Tarjeta de Crédito" else if (metodo.tipo == TipoMetodoPago.TARJETA_DEBITO) "Tarjeta de Débito" else "Efectivo")
+            val detail = if (metodo.tipo == TipoMetodoPago.EFECTIVO) "DINERO FÍSICO" else "**** ${metodo.ultimosDigitos ?: "0000"}"
+
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+                .clip(RoundedCornerShape(12.dp)).background(if (isSelected) Purple else PurpleLight.copy(alpha = 0.2f))
+                .clickable { onSelect(metodo.idMetodoPago) }.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSelected) Color.White.copy(alpha = 0.2f)
+                        else Color.White
+                    ), contentAlignment = Alignment.Center) {
+                    Text(emoji, fontSize = 20.sp)
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = label, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface)
+                    Text(text = detail, fontSize = 12.sp, color = if (isSelected) Color.White.copy(alpha = 0.7f) else TextGray)
+                }
+
+                if (isSelected) {
+                    Icon(imageVector = Icons.Outlined.CheckCircle, contentDescription = "Seleccionado", tint = Color.White, modifier = Modifier.size(22.dp))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth().height(46.dp).clip(RoundedCornerShape(10.dp))
+            .border(2.dp, Purple, RoundedCornerShape(10.dp)).clickable { onAddCard() }.padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Icon(imageVector = Icons.Outlined.AddCard, contentDescription = null,
+                tint = Purple, modifier = Modifier.size(20.dp))
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(text = "Añadir tarjeta crédito / débito", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Purple)
+        }
     }
 }

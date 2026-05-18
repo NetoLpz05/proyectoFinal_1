@@ -126,7 +126,16 @@ fun RegisterScreenContent(
                 .clip(RoundedCornerShape(16.dp))
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Crear Cuenta",
+            fontWeight = FontWeight.Bold,
+            fontSize = 32.sp,
+            color = DarkNavy,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
 
         Box(
             modifier = Modifier
@@ -165,15 +174,6 @@ fun RegisterScreenContent(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Crear Cuenta",
-            fontWeight = FontWeight.Bold,
-            fontSize = 32.sp,
-            color = DarkNavy,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
 
         if (uiState is AuthUiState.Error) {
             Text(

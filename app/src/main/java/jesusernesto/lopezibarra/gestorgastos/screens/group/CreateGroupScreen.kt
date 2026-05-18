@@ -22,9 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import jesusernesto.lopezibarra.gestorgastos.dummy.DummyData
-import jesusernesto.lopezibarra.gestorgastos.dummy.DummyData.groupTypes
-import jesusernesto.lopezibarra.gestorgastos.dummy.DummyData.GroupType
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.Background
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.DarkNavy
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.White
@@ -129,7 +126,7 @@ fun CrearGrupoContent(
                 )
                 Spacer(Modifier.height(12.dp))
                 GroupTypeGrid(
-                    types = DummyData.groupTypes,
+                    types = groupTypes,
                     selected = selectedType,
                     onSelect = onTypeChange
                 )
@@ -272,7 +269,7 @@ fun CrearGrupoScreen(
                     color = TextGray, letterSpacing = 1.sp)
                 Spacer(Modifier.height(12.dp))
                 GroupTypeGrid(
-                    types = DummyData.groupTypes,
+                    types = groupTypes,
                     selected = selectedType,
                     onSelect = { selectedType = it }
                 )
@@ -315,7 +312,7 @@ fun CrearGrupoScreen(
 
 @Composable
 private fun GroupTypeGrid(
-    types: List<DummyData.GroupType>,
+    types: List<GroupType>,
     selected: String,
     onSelect: (String) -> Unit
 ) {
@@ -387,3 +384,14 @@ fun CrearGrupoScreenPreview() {
         )
     }
 }
+
+data class GroupType(val label: String, val emoji: String)
+
+val groupTypes = listOf(
+    GroupType("Familiar", "👨‍👩‍👧‍👦"),
+    GroupType("Trabajo",  "💼"),
+    GroupType("Pareja",   "💑"),
+    GroupType("Escuela",  "🎓"),
+    GroupType("Evento",   "🎉"),
+    GroupType("Viaje",    "✈️"),
+)

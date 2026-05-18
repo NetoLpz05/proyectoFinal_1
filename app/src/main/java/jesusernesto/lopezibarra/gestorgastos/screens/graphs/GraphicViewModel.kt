@@ -8,8 +8,7 @@ import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
 import jesusernesto.lopezibarra.gestorgastos.data.entity.CategoriaEntity
 import jesusernesto.lopezibarra.gestorgastos.data.entity.GastoEntity
 import jesusernesto.lopezibarra.gestorgastos.data.enums.PeriodoGrafica
-import jesusernesto.lopezibarra.gestorgastos.dummy.DummyData.categorias
-import jesusernesto.lopezibarra.gestorgastos.dummy.DummyData.gastos
+
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar

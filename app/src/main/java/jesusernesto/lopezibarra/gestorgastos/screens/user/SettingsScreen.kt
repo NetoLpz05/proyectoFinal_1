@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.Notifications.NotificationScheduler
-import jesusernesto.lopezibarra.gestorgastos.dummy.DummyData
 import jesusernesto.lopezibarra.gestorgastos.screens.components.AppTopBar
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 
@@ -40,7 +39,7 @@ fun AlertasScreen(
     var alertasHabilitadasLocal by remember { mutableStateOf(uiState.alertasHabilitadas) }
     val categoriasState = remember {
         mutableStateMapOf<String, Boolean>().apply {
-            DummyData.categorias.forEach { (_, nombre) -> put(nombre, true) }
+            categorias.forEach { (_, nombre) -> put(nombre, true) }
         }
     }
 
@@ -170,7 +169,7 @@ fun AlertasScreen(
                     modifier = Modifier.padding(bottom = 10.dp)
                 )
 
-                DummyData.categorias.forEach { (emoji, nombre) ->
+                categorias.forEach { (emoji, nombre) ->
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
                         shape = RoundedCornerShape(14.dp),
@@ -535,4 +534,11 @@ fun AlertasScreenPreview() {
         )
     }
 }
-
+val categorias = listOf(
+    "🏠" to "Vivienda",
+    "🎬" to "Entretenimiento",
+    "🚗" to "Transporte",
+    "🍔" to "Alimentación",
+    "❤️" to "Salud",
+    "📦" to "Otros",
+)

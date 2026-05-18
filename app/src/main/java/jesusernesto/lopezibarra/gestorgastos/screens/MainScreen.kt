@@ -8,10 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.Note
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
@@ -21,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +36,6 @@ import coil.request.ImageRequest
 import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
 import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MovimientoUI
 import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MovimientoViewModel
-import jesusernesto.lopezibarra.gestorgastos.dummy.Transaccion
 import jesusernesto.lopezibarra.gestorgastos.screens.budget.BudgetScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.components.BottomNavBar
 import jesusernesto.lopezibarra.gestorgastos.screens.graphs.GraphicScreen
@@ -48,6 +44,7 @@ import jesusernesto.lopezibarra.gestorgastos.screens.group.MisGruposScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.group.GroupDetailScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.group.AddGroupExpenseScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.income_expenses.AddCardScreen
+import jesusernesto.lopezibarra.gestorgastos.screens.income_expenses.DetalleMovimientoScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.income_expenses.EditExpenseScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.income_expenses.NewMovementScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.user.AlertasScreen
@@ -189,8 +186,15 @@ fun MainScreen(
                 AlertasScreen(onBack = { navController.popBackStack() })
             }
 
-            composable("DetalleMovimiento/{tipo}/{id}") {
-                // TODO: Implement real Detail Screen
+            composable("DetalleMovimiento/{tipo}/{id}") { backStackEntry ->
+                val tipo = backStackEntry.arguments?.getString("tipo") ?: ""
+                val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 0
+                DetalleMovimientoScreen(
+                    tipo = tipo,
+                    id = id,
+                    onBack = { navController.popBackStack() },
+                    onEdit = { t, i -> navController.navigate("EditarGasto/$t/$i") }
+                )
             }
             composable("EditarGasto/{tipo}/{id}") { backStackEntry ->
                 val tipo = backStackEntry.arguments?.getString("tipo") ?: ""
@@ -677,64 +681,6 @@ fun WeeklyBarGraph(data: List<Pair<Float, Float>>) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Gastos", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
             }
-        }
-    }
-}
-
-@Composable
-fun DetalleMovimientoScreen(transaccion: Transaccion, onBack: () -> Unit) {
-    val isIngreso = transaccion.amount > 0
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null, tint = Purple) }
-            Text("Detalles", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
-            Row {
-                IconButton(onClick = {}) { Icon(Icons.Outlined.Edit, contentDescription = null, tint = TextGray) }
-                IconButton(onClick = {}) { Icon(Icons.Outlined.Delete, contentDescription = null, tint = RedExpense) }
-            }
-        }
-
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(PurpleLight), contentAlignment = Alignment.Center) {
-                Text(transaccion.iconEmoji, fontSize = 40.sp)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(transaccion.title, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurface)
-            Text(transaccion.category, fontSize = 16.sp, color = TextGray)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "${if (isIngreso) "+ " else "- "}$${"%,.2f".format(Math.abs(transaccion.amount))}",
-                fontWeight = FontWeight.Bold, fontSize = 32.sp, color = if (isIngreso) GreenIncome else RedExpense
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-        Card(
-            modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                DetalleItem("Fecha", transaccion.date, Icons.Outlined.CalendarMonth)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = PurpleLight.copy(alpha = 0.3f))
-                DetalleItem("Método de pago", transaccion.paymentMethod, Icons.AutoMirrored.Outlined.Note)
-            }
-        }
-    }
-}
-
-@Composable
-fun DetalleItem(label: String, value: String, icon: ImageVector) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, tint = Purple, modifier = Modifier.size(24.dp))
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(label, fontSize = 12.sp, color = TextGray)
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

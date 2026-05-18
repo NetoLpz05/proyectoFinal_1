@@ -13,7 +13,6 @@ import jesusernesto.lopezibarra.gestorgastos.data.entity.GrupoEntity
 import jesusernesto.lopezibarra.gestorgastos.data.entity.UsuarioEntity
 import jesusernesto.lopezibarra.gestorgastos.data.repository.GrupoRepository
 import jesusernesto.lopezibarra.gestorgastos.data.repository.GrupoResult
-import jesusernesto.lopezibarra.gestorgastos.dummy.gastosEjemplo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
