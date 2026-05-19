@@ -1,4 +1,4 @@
-````md
+
 <div align="center">
 
 # 💸 GestorGastos
@@ -15,7 +15,7 @@ Desarrollada con **Jetpack Compose**, **MVVM**, **Room** y **Firebase**.
 
 </div>
 
----
+
 
 # 📱 Características
 
@@ -57,7 +57,7 @@ Desarrollada con **Jetpack Compose**, **MVVM**, **Room** y **Firebase**.
 - Material 3
 - Tema oscuro y claro
 
----
+
 
 # 🛠️ Stack Tecnológico
 
@@ -73,13 +73,13 @@ Desarrollada con **Jetpack Compose**, **MVVM**, **Room** y **Firebase**.
 | 💻 Lenguaje | Kotlin |
 | 📱 Min SDK | Android 8.1 (API 27) |
 
----
+
 
 # 🏗️ Arquitectura
 
 La aplicación sigue una arquitectura **MVVM** con enfoque **offline-first**.
 
-```text
+
 ┌──────────────────────┐
 │   UI (Compose)       │
 └──────────┬───────────┘
@@ -95,24 +95,19 @@ La aplicación sigue una arquitectura **MVVM** con enfoque **offline-first**.
 │ Room                 │
 │ FirestoreSyncService │
 └──────────────────────┘
-```
-
----
 
 # 🔄 Estrategia de sincronización
 
-```text
+
 1. Todas las lecturas vienen desde Room
 2. Las escrituras se guardan primero localmente
 3. FirestoreSyncService sincroniza en background
 4. Firestore almacena cambios offline automáticamente
-```
 
----
 
 # 🗄️ Estructura de Firestore
 
-```text
+
 usuarios/
  └── {firebaseUid}/
       ├── gastos/
@@ -125,9 +120,6 @@ grupos/
  └── {idGrupo}/
       ├── gastos/
       └── deudas/
-```
-
----
 
 # ⚙️ Configuración del proyecto
 
@@ -137,71 +129,42 @@ grupos/
 - JDK 11
 - Cuenta de Firebase
 
----
 
 ## 🚀 Instalación
 
 ### 1️⃣ Clonar repositorio
 
-```bash
+
 git clone https://github.com/tu-usuario/gestorgastos.git
 cd gestorgastos
-```
 
----
 
 ### 2️⃣ Configurar Firebase
 
 1. Crear proyecto en Firebase Console
 2. Agregar aplicación Android:
-   ```text
+
    jesusernesto.lopezibarra.gestorgastos
-   ```
+
 3. Descargar `google-services.json`
 4. Colocarlo dentro de `/app`
 5. Habilitar:
    - Authentication → Email/Password
    - Cloud Firestore
 
----
 
-### 3️⃣ Reglas de Firestore
 
-```javascript
-rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    match /usuarios/{uid}/{document=**} {
-      allow read, write:
-      if request.auth != null
-      && request.auth.uid == uid;
-    }
-
-    match /grupos/{grupoId}/{document=**} {
-      allow read, write:
-      if request.auth != null;
-    }
-
-  }
-}
-```
-
----
-
-### 4️⃣ Ejecutar proyecto
+### 3️⃣ Ejecutar proyecto
 
 Abrir el proyecto en Android Studio y ejecutar en:
 
 - Emulador Android
 - Dispositivo físico
 
----
+
 
 # 📂 Estructura del proyecto
 
-```text
 app/src/main/java/jesusernesto/lopezibarra/gestorgastos/
 
 ├── data/
@@ -225,9 +188,7 @@ app/src/main/java/jesusernesto/lopezibarra/gestorgastos/
 ├── ui/theme/
 │
 └── MainActivity.kt
-```
 
----
 
 # 👨‍💻 Autores
 
@@ -253,4 +214,4 @@ Proyecto de uso educativo.
 ### ⭐ Si te gusta el proyecto, dale una estrella al repositorio ⭐
 
 </div>
-````
+
