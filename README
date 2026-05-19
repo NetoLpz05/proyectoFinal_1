@@ -1,3 +1,176 @@
-Jesús Ernesto López Ibarra - Movimientos
-Servando Contreras Jimenez - Graficas
-Gael Alberto Guerra Landavazo - Grupos
+# 💸 GestorGastos
+
+Aplicación Android para gestión de finanzas personales y grupales. Desarrollada con Jetpack Compose, arquitectura MVVM, base de datos local Room y sincronización en la nube con Firebase.
+
+---
+
+## 📱 Características
+
+- **Autenticación** — Registro e inicio de sesión con Firebase Auth. Recuperación de contraseña por correo electrónico.
+- **Movimientos** — Registro de gastos e ingresos con categoría, método de pago, ubicación y foto de recibo.
+- **Presupuestos** — Creación de presupuestos mensuales por categoría con gastos fijos y límites de gasto.
+- **Grupos** — Gestión de gastos compartidos entre múltiples usuarios con división automática de deudas.
+- **Alertas** — Notificaciones cuando el gasto se acerca al límite del presupuesto.
+- **Métodos de pago** — Administración de tarjetas de débito, crédito y efectivo.
+- **Modo offline** — Funciona sin internet. Sincroniza automáticamente al volver la conexión.
+- **Tema oscuro / claro** — Soporte para modo oscuro.
+
+---
+
+## 🛠️ Tecnologías
+
+| Capa | Tecnología |
+|---|---|
+| UI | Jetpack Compose + Material 3 |
+| Arquitectura | MVVM (ViewModel + StateFlow) |
+| Base de datos local | Room (SQLite) |
+| Autenticación | Firebase Authentication |
+| Base de datos en la nube | Cloud Firestore |
+| Imágenes | Coil |
+| Tareas en background | WorkManager |
+| Lenguaje | Kotlin |
+| Min SDK | 27 (Android 8.1) |
+
+---
+
+## 🏗️ Arquitectura
+
+La app sigue el patrón **MVVM** con repositorios que implementan una estrategia **offline-first**:
+
+```
+UI (Compose Screens)
+        ↓
+ViewModel (StateFlow)
+        ↓
+Repository
+   ├── Room (fuente de verdad local — lectura siempre desde aquí)
+   └── FirestoreSyncService (escritura en paralelo — fire and forget)
+```
+
+### Estrategia de sincronización
+
+1. Todas las **lecturas** vienen de Room (rápido, funciona sin internet).
+2. Todas las **escrituras** van a Room primero (inmediato).
+3. Después de cada escritura, `FirestoreSyncService` sube el cambio a Firestore en background.
+4. Si no hay conexión, Firestore guarda la operación en caché y la envía cuando vuelve el internet.
+
+---
+
+## 🗄️ Estructura de Firestore
+
+```
+usuarios/
+  {firebaseUid}/
+    nombre, apellido, email, ...
+    gastos/
+      {idGasto}/ → monto, descripcion, fecha, categoria, ...
+    ingresos/
+      {idIngreso}/ → monto, descripcion, fecha, ...
+    presupuestos/
+      {mes_anio}/
+        detalles/{idDetalle}/
+        gastosFijos/{idGastoFijo}/
+    metodosPago/
+      {idMetodoPago}/
+    alertas/
+      {idAlerta}/
+
+grupos/
+  {idGrupo}/
+    nombre, tipo, codigoInvitacion, ...
+    gastos/{idGastoGrupo}/
+    deudas/{idDeuda}/
+```
+
+---
+
+## ⚙️ Configuración del proyecto
+
+### Requisitos
+
+- Android Studio Hedgehog o superior
+- JDK 11
+- Cuenta en [Firebase Console](https://console.firebase.google.com)
+
+### Pasos
+
+**1. Clonar el repositorio**
+```bash
+git clone https://github.com/tu-usuario/gestorgastos.git
+cd gestorgastos
+```
+
+**2. Configurar Firebase**
+
+- Crea un proyecto en [Firebase Console](https://console.firebase.google.com)
+- Agrega una app Android con el package: `jesusernesto.lopezibarra.gestorgastos`
+- Descarga `google-services.json` y colócalo en la carpeta `/app`
+- Habilita **Authentication → Correo/Contraseña**
+- Crea una base de datos **Firestore** en modo producción
+
+**3. Configurar reglas de Firestore**
+
+En Firebase Console → Firestore → Reglas:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /grupos/{grupoId}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+**4. Compilar y ejecutar**
+
+Abre el proyecto en Android Studio y ejecuta en un emulador o dispositivo físico.
+
+---
+
+## 📂 Estructura del proyecto
+
+```
+app/src/main/java/jesusernesto/lopezibarra/gestorgastos/
+│
+├── data/
+│   ├── dao/                  # DAOs de Room
+│   ├── entity/               # Entidades de Room
+│   ├── repository/           # Repositorios (Room + Firestore)
+│   ├── enums/                # Enums (TipoMetodoPago, etc.)
+│   ├── Notifications/        # WorkManager para alertas
+│   ├── AppDatabase.kt        # Base de datos Room
+│   ├── SessionManager.kt     # Sesión del usuario activo
+│   └── FirestoreSyncService.kt # Sincronización con Firestore
+│
+├── screens/
+│   ├── user/                 # Login, Register, ForgotPassword
+│   ├── home/                 # Pantalla principal / dashboard
+│   ├── income_expenses/      # Gastos e ingresos
+│   ├── budget/               # Presupuestos
+│   ├── groups/               # Grupos de gastos
+│   └── profile/              # Perfil de usuario
+│
+├── ui/theme/                 # Colores, tipografía, tema
+└── MainActivity.kt
+```
+
+---
+
+## 👤 Autores
+
+**Jesús Ernesto López Ibarra**
+**Gael Alberto Guerra Landavazo**
+**Servando Contreras Jimenez**
+**Santiago Sanchez Chavira**
+Proyecto universitario — Aplicaciones Móviles
+
+---
+
+## 📄 Licencia
+
+Este proyecto es de uso educativo.
