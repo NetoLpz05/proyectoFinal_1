@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -27,7 +28,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import jesusernesto.lopezibarra.gestorgastos.data.BiometricHelper
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 
 @Composable
@@ -196,10 +199,17 @@ fun LoginScreen(
     onForgotPasswordClick: () -> Unit,
     viewModel: UsuarioViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val activity = context as FragmentActivity
+    var biometricError by remember { mutableStateOf<String?>(null) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
+
+    val puedeUsarBiometria = remember {
+        BiometricHelper.isAvailable(context) && BiometricHelper.hasCredentials(context)
+    }
 
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Exito) {
@@ -293,10 +303,10 @@ fun LoginScreen(
             )
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { viewModel.login(email, password) },
+            onClick = { viewModel.login(email, password, context) },
             modifier = Modifier.fillMaxWidth().height(45.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Purple),
@@ -312,14 +322,40 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = {},
+            onClick = {
+                if (puedeUsarBiometria) {
+                    BiometricHelper.authenticate(
+                        activity = activity,
+                        onSuccess = {
+                            viewModel.loginConBiometria(
+                                context = context,
+                                onSuccess = onLoginClick,
+                                onError = { biometricError = it }
+                            )
+                        },
+                        onError = { biometricError = it }
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth().height(45.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = DarkNavy)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (puedeUsarBiometria) DarkNavy else DarkNavy.copy(alpha = 0.4f)
+            ),
+            enabled = puedeUsarBiometria
         ) {
-            Icon(imageVector = Icons.Outlined.Fingerprint, contentDescription = null, tint = Color.White, modifier = Modifier.size(25.dp))
+            Icon(imageVector = Icons.Outlined.Fingerprint, contentDescription = null,
+                tint = Color.White, modifier = Modifier.size(25.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Acceso Biométrico", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.White)
+            Text(
+                if (puedeUsarBiometria) "Acceso Biométrico" else "Activa la huella en tu perfil",
+                fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.White
+            )
+        }
+
+        biometricError?.let {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -345,6 +381,7 @@ fun LoginScreen(
         )
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

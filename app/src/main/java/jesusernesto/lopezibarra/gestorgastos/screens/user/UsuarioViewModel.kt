@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import jesusernesto.lopezibarra.gestorgastos.data.AppDatabase
+import jesusernesto.lopezibarra.gestorgastos.data.BiometricHelper
 import jesusernesto.lopezibarra.gestorgastos.data.Notifications.NotificationScheduler
 import jesusernesto.lopezibarra.gestorgastos.data.Notifications.Notificationhelper
 import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
@@ -37,7 +38,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     // ─────────────────────────────────────────────────────────────
     // LOGIN  — Firebase autentica, Room devuelve el perfil local
     // ─────────────────────────────────────────────────────────────
-    fun login(email: String, contrasena: String) {
+    fun login(email: String, contrasena: String, context: Context) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Cargando
 
@@ -56,8 +57,15 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                     Notificationhelper.crearCanal(getApplication())
                     NotificationScheduler.programar(getApplication())
 
+                    if (result.usuario.biometriaActiva) {
+                        BiometricHelper.saveCredentials(context, email, contrasena)
+                    }
+
+
                     AuthUiState.Exito(result.usuario)
+
                 }
+
                 is AuthResult.Error -> AuthUiState.Error(result.mensaje)
             }
         }
@@ -142,6 +150,31 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     // ─────────────────────────────────────────────────────────────
     // BIOMETRÍA Y CIERRE DE SESIÓN (sin cambios)
     // ─────────────────────────────────────────────────────────────
+
+    fun loginConBiometria(context: Context, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val credenciales = BiometricHelper.getCredentials(context) ?: run {
+            onError("No hay credenciales guardadas")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Cargando
+            val result = repository.login(credenciales.first, credenciales.second)
+            _uiState.value = when (result) {
+                is AuthResult.Exito -> {
+                    SessionManager.usuarioActual = result.usuario
+                    val prefs = context.getSharedPreferences("alertas_config", Context.MODE_PRIVATE)
+                    prefs.edit().putInt("id_usuario_actual", result.usuario.idUsuario).apply()
+                    Notificationhelper.crearCanal(context)
+                    NotificationScheduler.programar(context)
+                    onSuccess()
+                    AuthUiState.Exito(result.usuario)
+                }
+                is AuthResult.Error -> AuthUiState.Error(result.mensaje)
+            }
+        }
+    }
+
+
     fun actualizarBiometria(activa: Boolean) {
         val usuario = SessionManager.usuarioActual ?: return
         viewModelScope.launch {
@@ -151,7 +184,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun cerrarSesion() {
-        SessionManager.cerrarSesion()   // hace FirebaseAuth.signOut() + limpia sesión
+        SessionManager.cerrarSesion()
         _uiState.value = AuthUiState.Idle
         NotificationScheduler.cancelar(getApplication())
     }

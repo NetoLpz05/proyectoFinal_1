@@ -217,7 +217,6 @@ fun AlertasScreen(
                     OutlinedButton(
                             onClick = {
                                 val prefs = context.getSharedPreferences("alertas_config", Context.MODE_PRIVATE)
-                                // Limpiar todas las flags de "ya notificado"
                                 val editor = prefs.edit()
                                 prefs.all.keys
                                     .filter { it.startsWith("alerta_") || it.startsWith("excedido_") }

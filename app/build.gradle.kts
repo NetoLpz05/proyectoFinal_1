@@ -60,7 +60,10 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.compose.material:material-icons-extended")
-    
+
+    // Biometrica
+    implementation("androidx.biometric:biometric:1.1.0")
+
     // Room
     implementation("androidx.room:room-runtime:2.7.1")
     implementation("androidx.room:room-ktx:2.7.1")

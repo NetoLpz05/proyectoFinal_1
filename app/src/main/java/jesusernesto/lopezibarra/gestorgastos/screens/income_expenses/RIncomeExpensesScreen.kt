@@ -79,7 +79,7 @@ fun NewMovementContent(
     onResetSaveSuccess: () -> Unit) {
 
     var isGasto by remember { mutableStateOf(true) }
-    var amount by remember { mutableStateOf("0.00") }
+    var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())) }
     var selectedCategory by remember { mutableStateOf("Entretenimiento") }
@@ -190,10 +190,12 @@ fun NewMovementContent(
                         colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent, focusedBorderColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent))
                 } else {
-                    Text(text = amount, fontWeight = FontWeight.Bold, fontSize = 48.sp, color = TextGray,
-                        modifier = Modifier.clickable {
-                            isEditingAmount = true
-                        }
+                    Text(
+                        text = amount.ifBlank { "0.00" },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 48.sp,
+                        color = TextGray.copy(alpha = if (amount.isBlank()) 0.3f else 1f),
+                        modifier = Modifier.clickable { isEditingAmount = true }
                     )
                 }
             }

@@ -14,13 +14,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.FragmentActivity
 import jesusernesto.lopezibarra.gestorgastos.screens.MainScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.user.ForgotPasswordScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.user.LoginScreen
 import jesusernesto.lopezibarra.gestorgastos.screens.user.RegisterScreen
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.GestorgastosTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
