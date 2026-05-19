@@ -25,9 +25,9 @@ class GrupoRepository(
         if (nombre.isBlank()) return GrupoResult.Error("El nombre no puede estar vacío")
         val codigo = generarCodigo()
         val grupo = GrupoEntity(nombre = nombre.trim(), tipo = tipo, codigoInvitacion = codigo, imagen = imagen)
-        val id = dao.insertarGrupo(grupo)                                 // 1. Room
+        val id = dao.insertarGrupo(grupo)
         val grupoConId = grupo.copy(idGrupo = id.toInt())
-        FirestoreSyncService.syncGrupo(grupoConId)                        // 2. Firestore
+        FirestoreSyncService.syncGrupo(grupoConId)
         return GrupoResult.Exito(grupoConId)
     }
 
@@ -71,7 +71,6 @@ class GrupoRepository(
         if (participantes.isEmpty()) return GrupoResult.Error("Debe haber al menos un participante")
 
         return try {
-            // 1. Room: insertar gasto de grupo
             val gastoGrupo = GastoGrupoEntity(
                 idGrupo = idGrupo,
                 idUsuarioPago = idUsuarioPago,
@@ -83,10 +82,8 @@ class GrupoRepository(
             val idGastoGrupoInserted = dao.insertarGastoGrupo(gastoGrupo)
             val gastoGrupoConId = gastoGrupo.copy(idGastoGrupo = idGastoGrupoInserted.toInt())
 
-            // 2. Firestore: sincronizar gasto de grupo
             FirestoreSyncService.syncGastoGrupo(gastoGrupoConId)
 
-            // 3. Room: crear deudas
             val montoPorPersona = monto / participantes.size
             participantes
                 .filter { it != idUsuarioPago }
@@ -97,11 +94,10 @@ class GrupoRepository(
                         montoDeuda = montoPorPersona
                     )
                     dao.insertarDeuda(deuda)
-                    // 4. Firestore: sincronizar deuda
+
                     FirestoreSyncService.syncDeudaGrupo(deuda)
                 }
 
-            // 5. Sincronizar al gasto individual del que pagó (Room + Firestore)
             movimientoDao?.let { movDao ->
                 val gastoIndividual = GastoEntity(
                     idUsuario = idUsuarioPago,

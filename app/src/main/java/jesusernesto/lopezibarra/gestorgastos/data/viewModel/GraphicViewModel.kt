@@ -1,12 +1,10 @@
-package jesusernesto.lopezibarra.gestorgastos.screens.graphs
+package jesusernesto.lopezibarra.gestorgastos.data.viewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import jesusernesto.lopezibarra.gestorgastos.data.AppDatabase
 import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
-import jesusernesto.lopezibarra.gestorgastos.data.entity.CategoriaEntity
-import jesusernesto.lopezibarra.gestorgastos.data.entity.GastoEntity
 import jesusernesto.lopezibarra.gestorgastos.data.enums.PeriodoGrafica
 
 import kotlinx.coroutines.flow.*

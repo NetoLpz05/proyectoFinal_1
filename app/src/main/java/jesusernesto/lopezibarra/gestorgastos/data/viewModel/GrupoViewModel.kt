@@ -1,8 +1,6 @@
-package jesusernesto.lopezibarra.gestorgastos.screens.group
+package jesusernesto.lopezibarra.gestorgastos.data.viewModel
 
-import android.R
 import android.app.Application
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import jesusernesto.lopezibarra.gestorgastos.data.AppDatabase

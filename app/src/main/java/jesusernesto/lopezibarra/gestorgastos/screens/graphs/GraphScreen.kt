@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.enums.PeriodoGrafica
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.CategoriaGraficaUi
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.GraphicViewModel
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.ResumenPeriodoUi
 import jesusernesto.lopezibarra.gestorgastos.screens.components.AppTopBar
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 import java.text.SimpleDateFormat

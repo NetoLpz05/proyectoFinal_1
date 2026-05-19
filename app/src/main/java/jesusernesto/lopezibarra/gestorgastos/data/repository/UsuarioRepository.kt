@@ -15,24 +15,13 @@ sealed class AuthResult {
     data class Error(val mensaje: String) : AuthResult()
 }
 
-/**
- * UsuarioRepository HÍBRIDO:
- *
- *  LOGIN   → Firebase Auth valida credenciales → busca UsuarioEntity en Room por firebaseUid
- *  REGISTRO → Firebase Auth crea cuenta → Room guarda perfil local → Firestore guarda perfil nube
- *  ACTUALIZAR PERFIL → Room actualiza local → Firestore actualiza nube en paralelo
- *  RECUPERAR CONTRASEÑA → Firebase manda email (no Room, Firebase lo maneja)
- *
- *  Las pantallas y ViewModels existentes NO cambian porque siguen recibiendo UsuarioEntity.
- */
+
 class UsuarioRepository(private val dao: UsuarioDao) {
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    // ─────────────────────────────────────────────────────────────
-    // LOGIN
-    // ─────────────────────────────────────────────────────────────
+
     suspend fun login(email: String, contrasena: String): AuthResult {
         if (email.isBlank() || contrasena.isBlank()) {
             return AuthResult.Error("Completa todos los campos")
@@ -81,9 +70,6 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         return AuthResult.Exito(usuarioRoom)
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // REGISTRO
-    // ─────────────────────────────────────────────────────────────
     suspend fun registrar(
         nombre: String,
         apellido: String,
@@ -94,7 +80,6 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         telefono: String = "",
         fotoPerfil: String? = null
     ): AuthResult {
-        // Validaciones básicas (igual que antes)
         if (nombre.isBlank() || apellido.isBlank()) {
             return AuthResult.Error("El nombre y apellido son obligatorios")
         }
@@ -105,7 +90,6 @@ class UsuarioRepository(private val dao: UsuarioDao) {
             return AuthResult.Error("La contraseña debe tener al menos 6 caracteres")
         }
 
-        // 1. Crear usuario en Firebase Auth
         val firebaseResult = try {
             auth.createUserWithEmailAndPassword(email.trim(), contrasena).await()
         } catch (e: FirebaseAuthUserCollisionException) {
@@ -119,14 +103,13 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         val firebaseUid = firebaseResult.user?.uid
             ?: return AuthResult.Error("Error al obtener UID de Firebase")
 
-        // 2. Guardar perfil en Room (local) — incluye el firebaseUid
         return try {
             val nuevoUsuario = UsuarioEntity(
                 firebaseUid = firebaseUid,
                 nombre = nombre.trim(),
                 apellido = apellido.trim(),
                 email = email.trim().lowercase(),
-                contrasena = "",              // Firebase maneja la contraseña, no Room
+                contrasena = "",
                 fechaNacimiento = fechaNacimiento,
                 genero = genero,
                 telefono = telefono.trim(),
@@ -135,28 +118,21 @@ class UsuarioRepository(private val dao: UsuarioDao) {
             val id = dao.insertar(nuevoUsuario)
             val usuarioConId = nuevoUsuario.copy(idUsuario = id.toInt())
 
-            // 3. Guardar perfil en Firestore (nube) — en paralelo, sin bloquear
             sincronizarPerfilFirestore(firebaseUid, usuarioConId)
 
             AuthResult.Exito(usuarioConId)
 
         } catch (e: Exception) {
-            // Si Room falla (email duplicado local), borrar la cuenta de Firebase para no quedar inconsistente
+
             firebaseResult.user?.delete()
             AuthResult.Error("Error al guardar el perfil local: ${e.localizedMessage}")
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // OBTENER USUARIO (igual que antes, sin cambios)
-    // ─────────────────────────────────────────────────────────────
     suspend fun obtenerUsuario(id: Int): UsuarioEntity? {
         return dao.buscarPorId(id)
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // ACTUALIZAR PERFIL
-    // ─────────────────────────────────────────────────────────────
     suspend fun actualizarPerfil(usuario: UsuarioEntity): AuthResult {
         return try {
             // 1. Actualizar Room local
@@ -173,12 +149,9 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // CAMBIAR TEMA Y BIOMETRÍA (igual que antes)
-    // ─────────────────────────────────────────────────────────────
     suspend fun cambiarTema(id: Int, tema: String) {
         dao.actualizarTema(id, tema)
-        // Opcional: sincronizar en Firestore también
+
         val usuario = dao.buscarPorId(id)
         usuario?.let {
             if (it.firebaseUid.isNotBlank()) {
@@ -193,16 +166,12 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         dao.actualizarBiometria(id, activa)
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // RECUPERAR CONTRASEÑA — Firebase envía el email, sin tocar Room
-    // ─────────────────────────────────────────────────────────────
     suspend fun enviarEmailRecuperacion(email: String): AuthResult {
         if (email.isBlank() || !email.contains("@")) {
             return AuthResult.Error("Correo electrónico inválido")
         }
         return try {
             auth.sendPasswordResetEmail(email.trim()).await()
-            // Usamos un usuario "vacío" como señal de éxito
             AuthResult.Exito(
                 UsuarioEntity(
                     nombre = "", apellido = "", email = email,
@@ -216,9 +185,7 @@ class UsuarioRepository(private val dao: UsuarioDao) {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // HELPER PRIVADO: sube el perfil a Firestore
-    // ─────────────────────────────────────────────────────────────
+
     private fun sincronizarPerfilFirestore(uid: String, usuario: UsuarioEntity) {
         val datos = hashMapOf(
             "idUsuarioRoom" to usuario.idUsuario,

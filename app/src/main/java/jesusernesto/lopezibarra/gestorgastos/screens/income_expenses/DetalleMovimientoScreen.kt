@@ -19,17 +19,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import jesusernesto.lopezibarra.gestorgastos.data.entity.MetodoPagoEntity
 import jesusernesto.lopezibarra.gestorgastos.data.enums.TipoMetodoPago
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MetodoPagoViewModel
 import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MovimientoUI
 import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MovimientoViewModel
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

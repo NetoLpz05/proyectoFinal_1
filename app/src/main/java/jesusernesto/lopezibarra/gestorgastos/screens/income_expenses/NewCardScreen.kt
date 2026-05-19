@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MetodoPagoViewModel
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 
 @Composable

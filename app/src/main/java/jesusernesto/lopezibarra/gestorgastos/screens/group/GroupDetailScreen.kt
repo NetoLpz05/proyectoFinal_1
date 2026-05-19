@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.entity.GastoGrupoEntity
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.GrupoViewModel
 import jesusernesto.lopezibarra.gestorgastos.screens.components.GastoTotalCard
 import jesusernesto.lopezibarra.gestorgastos.screens.components.GastoTotalCardData
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*

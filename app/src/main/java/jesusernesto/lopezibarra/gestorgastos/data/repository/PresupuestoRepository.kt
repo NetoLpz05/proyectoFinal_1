@@ -36,12 +36,10 @@ class PresupuestoRepository(
     ) {
         val mesAnio = "${mes}_${anio}"
 
-        // 1. Room — lógica existente sin cambios
         val presupuestoExistente = presupuestoDao.obtenerPresupuesto(idUsuario, mes, anio)
         val idPresupuesto = if (presupuestoExistente != null) {
             val actualizado = presupuestoExistente.copy(ingresoMensual = ingresoMensual)
             presupuestoDao.actualizar(actualizado)
-            // 2a. Firestore sync presupuesto actualizado
             uid?.let { FirestoreSyncService.syncPresupuesto(it, actualizado) }
             presupuestoExistente.idPresupuesto
         } else {
@@ -53,12 +51,10 @@ class PresupuestoRepository(
             )
             val id = presupuestoDao.insertar(nuevo).toInt()
             val nuevoConId = nuevo.copy(idPresupuesto = id)
-            // 2a. Firestore sync nuevo presupuesto
             uid?.let { FirestoreSyncService.syncPresupuesto(it, nuevoConId) }
             id
         }
 
-        // Gastos fijos — Room + Firestore
         gastoFijoDao.eliminarPorPresupuesto(idPresupuesto)
         val gastosFijosConId = gastosFijos.map { it.copy(idPresupuesto = idPresupuesto) }
         gastoFijoDao.insertarTodos(gastosFijosConId)
@@ -68,7 +64,6 @@ class PresupuestoRepository(
             }
         }
 
-        // Detalles por categoría — Room + Firestore
         detallePresupuestoDao.eliminarPorPresupuesto(idPresupuesto)
         val detallesConId = detalles.map { it.copy(idPresupuesto = idPresupuesto) }
         detallePresupuestoDao.insertarTodos(detallesConId)

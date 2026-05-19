@@ -31,6 +31,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.AuthUiState
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

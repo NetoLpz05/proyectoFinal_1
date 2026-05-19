@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.entity.GrupoEntity
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.GrupoUiState
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.GrupoViewModel
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 
 @Composable

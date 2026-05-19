@@ -3,11 +3,9 @@ package jesusernesto.lopezibarra.gestorgastos.screens.user
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import jesusernesto.lopezibarra.gestorgastos.R
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.BiometricHelper
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.AuthUiState
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.UsuarioViewModel
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 
 @Composable

@@ -26,10 +26,10 @@ interface MovimientoDao {
     @Delete
     suspend fun deleteIngreso(ingreso: IngresoEntity)
 
-    @Query("SELECT * FROM gasto WHERE idUsuario = :idUsuario ORDER BY fecha DESC")
+    @Query("SELECT * FROM gasto WHERE idUsuario = :idUsuario ORDER BY createdAt  DESC")
     fun getGastosPorUsuario(idUsuario: Int): Flow<List<GastoEntity>>
 
-    @Query("SELECT * FROM ingreso WHERE idUsuario = :idUsuario ORDER BY fecha DESC")
+    @Query("SELECT * FROM ingreso WHERE idUsuario = :idUsuario ORDER BY createdAt  DESC")
     fun getIngresosPorUsuario(idUsuario: Int): Flow<List<IngresoEntity>>
 
     @Query("SELECT * FROM gasto WHERE idGasto = :id")

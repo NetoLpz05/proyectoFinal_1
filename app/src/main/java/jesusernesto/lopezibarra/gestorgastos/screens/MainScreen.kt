@@ -222,7 +222,7 @@ fun HomeScreen(
     onBalanceClick: () -> Unit = {},
     movimientoViewModel: MovimientoViewModel = viewModel()
 ) {
-    val categoriasFiltro = listOf("Todos", "Vivienda", "Comida", "Transporte", "Compras", "Otros")
+    val categoriasFiltro = listOf("Todos", "Vivienda", "Alimentación", "Transporte", "Salud", "Entretenimiento", "Otros")
     var categoriaSeleccionada by remember { mutableStateOf("Todos") }
     var busqueda by remember { mutableStateOf("") }
     var fechaDesde by remember { mutableLongStateOf(startOfMonthMillis()) }

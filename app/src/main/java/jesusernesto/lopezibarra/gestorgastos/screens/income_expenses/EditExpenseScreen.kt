@@ -1,5 +1,8 @@
 package jesusernesto.lopezibarra.gestorgastos.screens.income_expenses
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,6 +18,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
@@ -50,10 +54,18 @@ fun EditExpenseScreen(
     
     var showDatePicker by remember { mutableStateOf(false) }
     var showPaymentSheet by remember { mutableStateOf(false) }
+    var showLocationDialog by remember { mutableStateOf(false) }
+    var locationInput by remember { mutableStateOf("") }
 
     val categorias by movimientoViewModel.categorias.collectAsState(initial = emptyList())
     val metodosPago by metodoPagoViewModel.metodosPago.collectAsState()
     val saveSuccess by movimientoViewModel.saveSuccess.collectAsState()
+
+    val photoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        photoUri = uri?.toString()
+    }
 
     LaunchedEffect(id, tipo) {
         movimiento = movimientoViewModel.obtenerMovimiento(tipo, id)
@@ -67,6 +79,7 @@ fun EditExpenseScreen(
             selectedCategoryId = it.idCategoria
             selectedPaymentId = it.idMetodoPago
             location = it.ubicacion ?: ""
+            locationInput = it.ubicacion ?: ""
             photoUri = it.fotoUri
         }
     }
@@ -191,17 +204,54 @@ fun EditExpenseScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            DashedBoxEdit(color = PurpleLight) {
+            DashedBoxEdit(
+                color = PurpleLight,
+                onClick = { showLocationDialog = true }
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp)) {
                     Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = Purple, modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(location.ifBlank { "Sin ubicación" }, color = TextGray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = location.ifBlank { "Sin ubicación" },
+                        color = if (location.isNotBlank()) MaterialTheme.colorScheme.onSurface else TextGray,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontStyle = if (location.isBlank()) FontStyle.Italic else FontStyle.Normal
+                    )
                 }
+            }
+
+            if (showLocationDialog) {
+                AlertDialog(
+                    onDismissRequest = { showLocationDialog = false },
+                    title = { Text("¿Dónde realizaste este movimiento?") },
+                    text = {
+                        OutlinedTextField(
+                            value = locationInput,
+                            onValueChange = { locationInput = it },
+                            label = { Text("Ej: Walmart, Calle 5 de Febrero...") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            location = locationInput
+                            showLocationDialog = false
+                        }) { Text("Aceptar") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showLocationDialog = false }) { Text("Cancelar") }
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            DashedBoxEdit(color = PurpleLight) {
+            DashedBoxEdit(
+                color = PurpleLight,
+                onClick = { photoLauncher.launch("image/*") }
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -211,6 +261,9 @@ fun EditExpenseScreen(
                         Icon(Icons.Outlined.CameraAlt, contentDescription = null, tint = TextGray, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(if (photoUri != null) "Cambiar foto de recibo" else "Adjuntar foto", color = TextGray, fontSize = 14.sp)
+                    }
+                    if (photoUri != null) {
+                        Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = GreenIncome)
                     }
                 }
             }
@@ -333,9 +386,10 @@ private fun PaymentCard(nombre: String, detalle: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun DashedBoxEdit(color: Color, content: @Composable () -> Unit) {
+private fun DashedBoxEdit(color: Color, onClick: () -> Unit = {}, content: @Composable () -> Unit) {
     Box(
         modifier = Modifier.fillMaxWidth().height(56.dp)
+            .clickable { onClick() }
             .drawBehind {
                 val stroke = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
                 drawRoundRect(color = color, style = stroke)

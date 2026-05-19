@@ -19,7 +19,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
@@ -28,6 +27,7 @@ import jesusernesto.lopezibarra.gestorgastos.screens.components.AppTopBar
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.UsuarioViewModel
 
 @Composable
 fun ProfileScreen(

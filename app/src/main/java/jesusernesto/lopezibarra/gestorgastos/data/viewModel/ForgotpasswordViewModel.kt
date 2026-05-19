@@ -1,4 +1,4 @@
-package jesusernesto.lopezibarra.gestorgastos.screens.user
+package jesusernesto.lopezibarra.gestorgastos.data.viewModel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -12,20 +12,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class ForgotPasswordUiState(
-    val emailEnviado: Boolean = false,    // antes: usuarioEncontrado + cambioExitoso
+    val emailEnviado: Boolean = false,
     val cargando: Boolean = false,
     val error: String? = null
 )
 
-/**
- * ForgotpasswordViewModel actualizado:
- *
- * Antes: buscaba el email en Room → mostraba pantalla de nueva contraseña → actualizaba Room.
- * Ahora: Firebase manda un correo de recuperación con un enlace seguro.
- *        El usuario hace clic en el email → Firebase cambia la contraseña en su sistema.
- *
- * La pantalla ForgetPassScreen.kt puede simplificarse: solo pide el email y muestra confirmación.
- */
+
 class ForgotpasswordViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: UsuarioRepository by lazy {
@@ -36,10 +28,6 @@ class ForgotpasswordViewModel(application: Application) : AndroidViewModel(appli
     private val _uiState = MutableStateFlow(ForgotPasswordUiState())
     val uiState: StateFlow<ForgotPasswordUiState> = _uiState
 
-    /**
-     * Envía el email de recuperación vía Firebase.
-     * Reemplaza buscarEmail() + cambiarContraseña() del flujo anterior.
-     */
     fun enviarEmailRecuperacion(email: String) {
         if (email.isBlank() || !email.contains("@")) {
             _uiState.update { it.copy(error = "Correo electrónico inválido") }

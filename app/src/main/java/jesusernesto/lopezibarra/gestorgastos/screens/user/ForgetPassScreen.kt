@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.ForgotpasswordViewModel
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.Purple
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.PurpleLight
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.TextGray

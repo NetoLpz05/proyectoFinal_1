@@ -20,10 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import jesusernesto.lopezibarra.gestorgastos.data.SessionManager
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.GrupoViewModel
 import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MovimientoViewModel
-import jesusernesto.lopezibarra.gestorgastos.screens.income_expenses.MetodoPagoViewModel
+import jesusernesto.lopezibarra.gestorgastos.data.viewModel.MetodoPagoViewModel
 import jesusernesto.lopezibarra.gestorgastos.ui.theme.*
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +36,7 @@ fun AddGroupExpenseScreen(
     metodoPagoViewModel: MetodoPagoViewModel = viewModel()
 ) {
     val currentUser = SessionManager.usuarioActual
-    
+
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableIntStateOf(0) }

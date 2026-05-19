@@ -31,7 +31,6 @@ class AlertaRepository(private val dao: AlertaDao) {
 
     suspend fun toggleAlerta(id: Int, activa: Boolean) {
         dao.toggleActiva(id, activa)
-        // Opcional: obtener y sincronizar el objeto completo o solo el campo en Firestore
     }
 
     suspend fun actualizarLimite(id: Int, limite: Double) {

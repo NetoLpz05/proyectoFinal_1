@@ -1,4 +1,4 @@
-package jesusernesto.lopezibarra.gestorgastos.screens.user
+package jesusernesto.lopezibarra.gestorgastos.data.viewModel
 
 import android.app.Application
 import android.content.Context
